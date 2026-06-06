@@ -5,7 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 module.exports = {
   entry: "./src/taskpane/taskpane.ts",
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "docs"),
     filename: "taskpane.js",
     clean: true,
   },
@@ -46,7 +46,7 @@ module.exports = {
     }),
   ],
   devServer: {
-    static: path.resolve(__dirname, "dist"),
+    static: path.resolve(__dirname, "docs"),
     port: 3000,
     server: {
       type: "https",
