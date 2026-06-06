@@ -1,0 +1,33 @@
+{
+  "name": "avalie-team-icon-vault",
+  "displayName": "Avalie Team Icon Vault",
+  "description": "Search and insert SVG icons from 7 icon libraries directly onto your PowerPoint slides.",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack serve --mode development",
+    "start": "npm run dev",
+    "validate": "npx office-addin-manifest validate manifest.xml"
+  },
+  "dependencies": {
+    "@iconify-json/fluent": "^1.2.0",
+    "@iconify-json/lucide": "^1.2.0",
+    "@iconify-json/tabler": "^1.2.0",
+    "@iconify-json/heroicons": "^1.2.0",
+    "@iconify-json/ri": "^1.2.0",
+    "@iconify-json/fa6-regular": "^1.2.0",
+    "@iconify-json/fa6-solid": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/office-js": "^1.0.0",
+    "copy-webpack-plugin": "^12.0.0",
+    "css-loader": "^7.0.0",
+    "html-webpack-plugin": "^5.6.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.4.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^5.0.0"
+  }
+}

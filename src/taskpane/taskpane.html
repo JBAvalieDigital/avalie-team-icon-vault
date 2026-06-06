@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avalie Team Icon Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+  <!-- Search Header -->
+  <header class="search-header">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+      <span class="brand-name">Avalie Icon Vault</span>
+    </div>
+    <div class="search-wrapper">
+      <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="6.5" cy="6.5" r="5.5" /><line x1="10.5" y1="10.5" x2="15" y2="15" />
+      </svg>
+      <input type="text" id="search-input" placeholder="Search icons…" spellcheck="false" autocomplete="off" />
+    </div>
+  </header>
+
+  <!-- Pack Filters -->
+  <div class="filters" id="filters"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="status-bar" style="display:none;">
+    <span><span class="result-count" id="result-count">0</span> results</span>
+    <span class="result-cap" id="result-cap"></span>
+  </div>
+
+  <!-- Content Area -->
+  <div id="content">
+    <div class="state-message" id="welcome-state">
+      <div class="state-icon">✦</div>
+      <h3>Avalie Team Icon Vault</h3>
+      <p>Search icons by keyword, then click to insert onto your slide.</p>
+      <p class="hint">Shift+click to copy SVG to clipboard instead.</p>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+</body>
+</html>

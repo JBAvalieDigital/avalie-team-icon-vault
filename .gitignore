@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Dev certs
+*.pem
+*.crt
+*.key
+
+# Logs
+npm-debug.log*
+*.log
+
+# Lock file (optional — remove this line if you want to pin deps)
+# package-lock.json
