@@ -13,8 +13,8 @@
   <Description DefaultValue="Search and insert SVG icons from 7 icon libraries directly onto your PowerPoint slides." />
 
   <!-- Icons -->
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png" />
+  <IconUrl DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/assets/icon-64.png" />
 
   <SupportUrl DefaultValue="https://avalie.com" />
 
@@ -31,7 +31,7 @@
 
   <!-- Task pane source -->
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html" />
+    <SourceLocation DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/taskpane.html" />
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -77,12 +77,12 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon16" DefaultValue="https://localhost:3000/assets/icon-16.png" />
-        <bt:Image id="Icon32" DefaultValue="https://localhost:3000/assets/icon-32.png" />
-        <bt:Image id="Icon80" DefaultValue="https://localhost:3000/assets/icon-80.png" />
+        <bt:Image id="Icon16" DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/assets/icon-16.png" />
+        <bt:Image id="Icon32" DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/assets/icon-32.png" />
+        <bt:Image id="Icon80" DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/assets/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="TaskpaneUrl" DefaultValue="https://localhost:3000/taskpane.html" />
+        <bt:Url id="TaskpaneUrl" DefaultValue="https://jbavaliedigital.github.io/avalie-team-icon-vault/taskpane.html" />
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="TabLabel" DefaultValue="Avalie Icons" />
