@@ -110,6 +110,75 @@ body {
   color: var(--av-text-muted);
 }
 
+/* ───── Color Selector ───── */
+.color-selector-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--av-border-light);
+}
+
+.color-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--av-text-secondary);
+}
+
+.color-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: transform var(--av-transition), box-shadow var(--av-transition);
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.active {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--av-surface), 0 0 0 4px var(--av-accent);
+}
+
+.custom-color-control {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+#custom-color-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.custom-swatch {
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
+  border: 1px solid var(--av-border);
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
 /* ───── Pack Filters ───── */
 .filters {
   display: flex;
@@ -235,16 +304,16 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform var(--av-transition);
 }
 
 .icon-preview svg {
   width: 100%;
   height: 100%;
-  fill: var(--av-text);
 }
 
-.icon-card:hover .icon-preview svg {
-  fill: var(--av-accent);
+.icon-card:hover .icon-preview {
+  transform: scale(1.15);
 }
 
 .icon-name {

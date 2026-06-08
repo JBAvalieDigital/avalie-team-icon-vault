@@ -54,6 +54,7 @@ const loadedPacks = new Set<string>();
 let debounceTimer: number | null = null;
 let toastTimer: number | null = null;
 let totalIconCount = 0;
+let selectedColor = "#000000";
 
 /* ──────────────────── Office Initialization ──────────────────── */
 
@@ -74,6 +75,9 @@ Office.onReady((info) => {
 function initApp(): void {
   // Build filter checkboxes
   buildFilters();
+
+  // Initialize color selector
+  setupColorSelector();
 
   // Bind search input
   const searchInput = document.getElementById(
@@ -242,7 +246,104 @@ function search(query: string, packs: string[]): SearchResult[] {
 }
 
 function buildSvgString(entry: IconEntry): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${entry.width} ${entry.height}">${entry.body}</svg>`;
+  const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${entry.width} ${entry.height}">${entry.body}</svg>`;
+  return colorSvg(rawSvg, selectedColor);
+}
+
+function colorSvg(svgString: string, hexColor: string): string {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, "image/svg+xml");
+    const svgEl = doc.querySelector("svg");
+    if (!svgEl) return svgString;
+
+    // Recursively replace currentColor attributes
+    const applyColor = (node: Element) => {
+      if (node.getAttribute("fill") === "currentColor") {
+        node.setAttribute("fill", hexColor);
+      }
+      if (node.getAttribute("stroke") === "currentColor") {
+        node.setAttribute("stroke", hexColor);
+      }
+      for (let i = 0; i < node.children.length; i++) {
+        applyColor(node.children[i]);
+      }
+    };
+
+    applyColor(svgEl);
+
+    // Apply color to root if it lacks explicit color attributes
+    if (!svgEl.hasAttribute("fill") && !svgEl.hasAttribute("stroke")) {
+      svgEl.setAttribute("fill", hexColor);
+    } else if (svgEl.getAttribute("fill") === "currentColor") {
+      svgEl.setAttribute("fill", hexColor);
+    } else if (svgEl.getAttribute("stroke") === "currentColor") {
+      svgEl.setAttribute("stroke", hexColor);
+    }
+
+    const style = svgEl.getAttribute("style");
+    if (style && style.includes("currentColor")) {
+      svgEl.setAttribute("style", style.replace(/currentColor/g, hexColor));
+    }
+
+    return new XMLSerializer().serializeToString(svgEl);
+  } catch (e) {
+    console.error("[Icon Vault] Failed to color SVG:", e);
+    return svgString;
+  }
+}
+
+function setupColorSelector(): void {
+  const swatches = document.querySelectorAll(".color-swatch");
+  const customInput = document.getElementById("custom-color-input") as HTMLInputElement;
+  const customBtn = document.getElementById("custom-swatch-btn") as HTMLButtonElement;
+
+  swatches.forEach((swatch) => {
+    swatch.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+      
+      // Let custom swatch open native input color picker instead of triggering direct swatch click
+      if (target.id === "custom-swatch-btn") {
+        return;
+      }
+
+      // Update active selection UI
+      swatches.forEach((s) => s.classList.remove("active"));
+      target.classList.add("active");
+
+      // Update global color selection
+      const color = target.dataset.color || "#000000";
+      selectedColor = color;
+      
+      // Update custom input to match
+      if (customInput) {
+        customInput.value = color;
+      }
+
+      // Re-run search to update all preview icons dynamically
+      performSearch();
+    });
+  });
+
+  if (customInput) {
+    customInput.addEventListener("input", (e) => {
+      const color = (e.target as HTMLInputElement).value;
+      selectedColor = color;
+
+      // Update custom button background color and focus style
+      if (customBtn) {
+        customBtn.style.background = color;
+        swatches.forEach((s) => s.classList.remove("active"));
+        customBtn.classList.add("active");
+      }
+
+      performSearch();
+    });
+
+    customInput.addEventListener("change", () => {
+      performSearch();
+    });
+  }
 }
 
 /* ──────────────────── Render Results ──────────────────── */

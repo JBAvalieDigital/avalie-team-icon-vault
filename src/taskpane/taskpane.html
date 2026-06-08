@@ -24,6 +24,24 @@
       </svg>
       <input type="text" id="search-input" placeholder="Search icons…" spellcheck="false" autocomplete="off" />
     </div>
+    <!-- Color Selector Container -->
+    <div class="color-selector-container">
+      <span class="color-label">Icon Color</span>
+      <div class="color-presets">
+        <button class="color-swatch active" data-color="#000000" style="background-color: #000000;" title="Black"></button>
+        <button class="color-swatch" data-color="#ffffff" style="background-color: #ffffff; border: 1px solid var(--av-border);" title="White"></button>
+        <button class="color-swatch" data-color="#4b5563" style="background-color: #4b5563;" title="Grey"></button>
+        <button class="color-swatch" data-color="#2b5797" style="background-color: #2b5797;" title="Blue"></button>
+        <button class="color-swatch" data-color="#d13438" style="background-color: #d13438;" title="Red"></button>
+        <button class="color-swatch" data-color="#107c10" style="background-color: #107c10;" title="Green"></button>
+        <div class="custom-color-control">
+          <input type="color" id="custom-color-input" value="#000000" title="Custom Color" />
+          <button class="color-swatch custom-swatch" id="custom-swatch-btn" title="Custom Color">
+            <span class="rainbow-gradient"></span>
+          </button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <!-- Pack Filters -->
