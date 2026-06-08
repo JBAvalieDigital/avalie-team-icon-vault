@@ -341,19 +341,78 @@ function renderResults(results: SearchResult[], query: string): void {
 /* ──────────────────── Insert Icon onto Slide ──────────────────── */
 
 async function insertIconOnSlide(svgString: string): Promise<void> {
-  // Add explicit dimensions so PowerPoint sizes it reasonably
-  let insertSvg = svgString;
-  if (!insertSvg.includes('width="')) {
-    insertSvg = insertSvg.replace(
-      "<svg",
-      '<svg width="100" height="100"'
-    );
+  // Determine aspect ratio to size it reasonably
+  let dispWidth = 100;
+  let dispHeight = 100;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, "image/svg+xml");
+    const svgEl = doc.querySelector("svg");
+    if (svgEl) {
+      const viewBox = svgEl.getAttribute("viewBox");
+      if (viewBox) {
+        const parts = viewBox.split(/\s+/).map(Number);
+        if (parts.length === 4 && !isNaN(parts[2]) && !isNaN(parts[3]) && parts[3] !== 0) {
+          const aspect = parts[2] / parts[3];
+          if (aspect > 1) {
+            dispHeight = 100 / aspect;
+          } else {
+            dispWidth = 100 * aspect;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[Icon Vault] Failed to parse SVG aspect ratio:", e);
   }
 
-  return new Promise<void>((resolve, reject) => {
+  // 1. Try SVG insertion if supported (ImageCoercion 1.2)
+  const canUseSvg =
+    typeof Office !== "undefined" &&
+    Office.context.requirements.isSetSupported("ImageCoercion", "1.2") &&
+    !!(Office.CoercionType as any)["XmlSvg"];
+
+  if (canUseSvg) {
+    try {
+      // Modify SVG to have explicit width/height matching the aspect ratio
+      let insertSvg = svgString;
+      if (!insertSvg.includes('width="')) {
+        insertSvg = insertSvg.replace(
+          "<svg",
+          `<svg width="${dispWidth}" height="${dispHeight}"`
+        );
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        Office.context.document.setSelectedDataAsync(
+          insertSvg,
+          { coercionType: Office.CoercionType.XmlSvg },
+          (result: Office.AsyncResult<void>) => {
+            if (result.status === Office.AsyncResultStatus.Succeeded) {
+              resolve();
+            } else {
+              reject(new Error(result.error.message));
+            }
+          }
+        );
+      });
+      return;
+    } catch (err) {
+      console.warn("[Icon Vault] SVG insertion failed, falling back to PNG:", err);
+    }
+  }
+
+  // 2. Fallback to PNG insertion
+  const base64 = await svgToPngBase64(svgString, 512);
+  await new Promise<void>((resolve, reject) => {
     Office.context.document.setSelectedDataAsync(
-      insertSvg,
-      { coercionType: Office.CoercionType.XmlSvg } as any,
+      base64,
+      {
+        coercionType: Office.CoercionType.Image,
+        imageWidth: dispWidth,
+        imageHeight: dispHeight,
+      } as any,
       (result: Office.AsyncResult<void>) => {
         if (result.status === Office.AsyncResultStatus.Succeeded) {
           resolve();
@@ -362,6 +421,69 @@ async function insertIconOnSlide(svgString: string): Promise<void> {
         }
       }
     );
+  });
+}
+
+function svgToPngBase64(svgString: string, targetSize = 512): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      if (!svgEl) {
+        return reject(new Error("Invalid SVG element"));
+      }
+
+      let width = targetSize;
+      let height = targetSize;
+
+      const viewBox = svgEl.getAttribute("viewBox");
+      if (viewBox) {
+        const parts = viewBox.split(/\s+/).map(Number);
+        if (parts.length === 4 && !isNaN(parts[2]) && !isNaN(parts[3]) && parts[3] !== 0) {
+          const aspect = parts[2] / parts[3];
+          if (aspect > 1) {
+            height = targetSize / aspect;
+          } else {
+            width = targetSize * aspect;
+          }
+        }
+      }
+
+      svgEl.setAttribute("width", width.toString());
+      svgEl.setAttribute("height", height.toString());
+
+      const serializedSvg = new XMLSerializer().serializeToString(svgEl);
+      const svgBlob = new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/png");
+          const base64 = dataUrl.split(",")[1];
+          URL.revokeObjectURL(url);
+          resolve(base64);
+        } else {
+          URL.revokeObjectURL(url);
+          reject(new Error("Canvas context not available"));
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to render SVG onto canvas"));
+      };
+
+      img.src = url;
+    } catch (e) {
+      reject(e);
+    }
   });
 }
 
