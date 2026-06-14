@@ -467,3 +467,200 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--av-text-muted);
 }
+
+/* ───── Tabs ───── */
+.top-tabs {
+  display: flex;
+  margin-top: 10px;
+  background: var(--av-surface-hover);
+  border-radius: var(--av-radius);
+  padding: 3px;
+}
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--av-text-secondary);
+  border-radius: calc(var(--av-radius) - 2px);
+  cursor: pointer;
+  transition: all var(--av-transition);
+}
+.tab-btn.active {
+  background: var(--av-surface);
+  color: var(--av-accent);
+  box-shadow: var(--av-shadow-sm);
+}
+
+/* ───── Layouts Gallery ───── */
+.layouts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 14px;
+}
+.layout-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--av-transition);
+  text-align: center;
+  font-weight: 600;
+  color: var(--av-text);
+}
+.layout-card:hover {
+  border-color: var(--av-accent);
+  box-shadow: var(--av-shadow-sm);
+}
+
+/* ───── Layout Editor ───── */
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--av-text-muted);
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 500;
+}
+.back-btn:hover {
+  color: var(--av-text);
+}
+.layout-preview-wrapper {
+  padding: 14px;
+  background: var(--av-surface-hover);
+  border-bottom: 1px solid var(--av-border-light);
+  display: flex;
+  justify-content: center;
+}
+.layout-preview-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  box-shadow: var(--av-shadow-sm);
+  border-radius: var(--av-radius);
+}
+.editor-panel {
+  padding: 14px;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--av-text-secondary);
+  margin-bottom: 4px;
+}
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  font-family: inherit;
+  font-size: 12px;
+}
+.form-group input[type="color"] {
+  width: 100%;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  cursor: pointer;
+}
+.primary-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--av-accent);
+  color: white;
+  border: none;
+  border-radius: var(--av-radius);
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.primary-btn:hover {
+  background: var(--av-accent-hover);
+}
+.secondary-btn {
+  width: 100%;
+  padding: 8px;
+  background: var(--av-surface);
+  color: var(--av-text);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+}
+.secondary-btn:hover {
+  border-color: var(--av-accent);
+}
+
+/* ───── Modal ───── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: var(--av-surface);
+  width: 90%;
+  max-height: 90%;
+  border-radius: var(--av-radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--av-shadow-md);
+}
+.modal-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--av-border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 {
+  font-size: 14px;
+  margin: 0;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--av-text-muted);
+}
+.close-btn:hover {
+  color: var(--av-text);
+}
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.modal-search-wrapper {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--av-border-light);
+}
+#modal-search-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+}
+.modal-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 6px;
+  padding: 10px;
+  overflow-y: auto;
+}

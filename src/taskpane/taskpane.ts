@@ -3,6 +3,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import "./taskpane.css";
+import { layouts, LayoutTemplate } from "./layouts";
 
 /* global Office */
 
@@ -33,6 +34,7 @@ interface SearchResult {
   set: string;
   key: string;
   svg: string;
+  rawSvg: string; // Add rawSvg without coloring for the layout editor
 }
 
 /* ──────────────────── Pack Definitions ──────────────────── */
@@ -52,9 +54,15 @@ const ICON_PACKS = [
 const iconMap = new Map<string, IconEntry[]>();
 const loadedPacks = new Set<string>();
 let debounceTimer: number | null = null;
+let modalDebounceTimer: number | null = null;
 let toastTimer: number | null = null;
 let totalIconCount = 0;
 let selectedColor = "#000000";
+
+// --- Layout State ---
+let activeLayout: LayoutTemplate | null = null;
+let layoutFieldData: Record<string, string> = {};
+let layoutSelectedIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`;
 
 /* ──────────────────── Office Initialization ──────────────────── */
 
@@ -79,20 +87,224 @@ function initApp(): void {
   // Initialize color selector
   setupColorSelector();
 
-  // Bind search input
-  const searchInput = document.getElementById(
-    "search-input"
-  ) as HTMLInputElement;
-  searchInput.addEventListener("input", () => {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = window.setTimeout(performSearch, 200);
-  });
+  // Setup UI behaviors
+  setupTabs();
+  setupLayouts();
+  setupModal();
 
-  // Focus search
-  searchInput.focus();
+  // Bind main search input
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(performSearch, 200);
+    });
+    searchInput.focus();
+  }
 
   // Load all icon packs in the background
   loadAllPacks();
+}
+
+/* ──────────────────── Tabs & Layouts ──────────────────── */
+
+function setupTabs(): void {
+  const tabs = document.querySelectorAll(".tab-btn");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+      
+      // Update tab styles
+      tabs.forEach(t => t.classList.remove("active"));
+      target.classList.add("active");
+      
+      // Update views
+      const viewId = target.dataset.tab;
+      document.querySelectorAll(".view-container").forEach(view => {
+        (view as HTMLElement).style.display = "none";
+        view.classList.remove("active");
+      });
+      
+      const targetView = document.getElementById(viewId!);
+      if (targetView) {
+        targetView.style.display = "block";
+        targetView.classList.add("active");
+      }
+    });
+  });
+}
+
+function setupLayouts(): void {
+  const gallery = document.getElementById("layouts-gallery");
+  if (!gallery) return;
+
+  gallery.innerHTML = "";
+  layouts.forEach(layout => {
+    const card = document.createElement("div");
+    card.className = "layout-card";
+    card.textContent = layout.name;
+    card.addEventListener("click", () => openLayoutEditor(layout));
+    gallery.appendChild(card);
+  });
+
+  const backBtn = document.getElementById("back-to-gallery");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      document.getElementById("layout-editor")!.style.display = "none";
+      document.getElementById("layouts-gallery")!.style.display = "grid";
+      activeLayout = null;
+    });
+  }
+
+  const insertBtn = document.getElementById("insert-layout-btn");
+  if (insertBtn) {
+    insertBtn.addEventListener("click", async () => {
+      if (!activeLayout) return;
+      insertBtn.classList.add("inserting");
+      insertBtn.textContent = "Inserting...";
+      try {
+        const svgStr = activeLayout.renderSvg(layoutFieldData, layoutSelectedIconSvg);
+        await insertIconOnSlide(svgStr);
+        showToast(`Inserted ${activeLayout.name}`, "success");
+      } catch (err) {
+        console.error("Insert layout failed:", err);
+        showToast("Insert failed", "error");
+      } finally {
+        insertBtn.classList.remove("inserting");
+        insertBtn.textContent = "Insert Layout";
+      }
+    });
+  }
+}
+
+function openLayoutEditor(layout: LayoutTemplate): void {
+  activeLayout = layout;
+  layoutFieldData = {};
+  
+  // Set defaults
+  layout.fields.forEach(f => {
+    layoutFieldData[f.id] = f.default;
+  });
+
+  document.getElementById("layouts-gallery")!.style.display = "none";
+  document.getElementById("layout-editor")!.style.display = "block";
+
+  renderLayoutEditorForm();
+  updateLayoutPreview();
+}
+
+function renderLayoutEditorForm(): void {
+  if (!activeLayout) return;
+  const form = document.getElementById("layout-form");
+  if (!form) return;
+  form.innerHTML = "";
+
+  activeLayout.fields.forEach(field => {
+    const group = document.createElement("div");
+    group.className = "form-group";
+    
+    const label = document.createElement("label");
+    label.textContent = field.label;
+    group.appendChild(label);
+
+    let input: HTMLInputElement | HTMLTextAreaElement;
+
+    if (field.type === "textarea") {
+      input = document.createElement("textarea");
+      input.rows = 3;
+    } else {
+      input = document.createElement("input");
+      input.type = field.type;
+    }
+
+    input.value = field.default;
+    input.addEventListener("input", (e) => {
+      layoutFieldData[field.id] = (e.target as HTMLInputElement).value;
+      updateLayoutPreview();
+    });
+
+    group.appendChild(input);
+    form.appendChild(group);
+  });
+}
+
+function updateLayoutPreview(): void {
+  if (!activeLayout) return;
+  const container = document.getElementById("layout-preview-container");
+  if (!container) return;
+  
+  const svgStr = activeLayout.renderSvg(layoutFieldData, layoutSelectedIconSvg);
+  container.innerHTML = svgStr;
+}
+
+/* ──────────────────── Modal Picker ──────────────────── */
+
+function setupModal(): void {
+  const modal = document.getElementById("icon-picker-modal");
+  const openBtn = document.getElementById("open-icon-picker-btn");
+  const closeBtn = document.getElementById("close-modal-btn");
+  const searchInput = document.getElementById("modal-search-input") as HTMLInputElement;
+
+  if (openBtn && modal) {
+    openBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+      searchInput.value = "";
+      document.getElementById("modal-results")!.innerHTML = "";
+      setTimeout(() => searchInput.focus(), 100);
+      
+      // Default to showing some icons if empty search
+      const initialResults = search("", getActivePacks()).slice(0, 50);
+      renderModalResults(initialResults);
+    });
+  }
+
+  if (closeBtn && modal) {
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      if (modalDebounceTimer) clearTimeout(modalDebounceTimer);
+      modalDebounceTimer = window.setTimeout(() => {
+        const query = searchInput.value.trim();
+        const results = search(query, getActivePacks());
+        renderModalResults(results);
+      }, 200);
+    });
+  }
+}
+
+function renderModalResults(results: SearchResult[]): void {
+  const grid = document.getElementById("modal-results");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  if (results.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--av-text-muted);">No icons found</div>`;
+    return;
+  }
+
+  for (const item of results) {
+    const card = document.createElement("div");
+    card.className = "icon-card";
+    card.title = item.key;
+    
+    const preview = document.createElement("div");
+    preview.className = "icon-preview";
+    preview.innerHTML = item.svg; // Preview in current selected color for visual consistency
+
+    card.appendChild(preview);
+
+    card.addEventListener("click", () => {
+      layoutSelectedIconSvg = item.rawSvg;
+      document.getElementById("icon-picker-modal")!.style.display = "none";
+      updateLayoutPreview();
+    });
+
+    grid.appendChild(card);
+  }
 }
 
 /* ──────────────────── Filter Chips ──────────────────── */
@@ -110,7 +322,14 @@ function buildFilters(): void {
     checkbox.type = "checkbox";
     checkbox.value = pack.id;
     checkbox.checked = true;
-    checkbox.addEventListener("change", performSearch);
+    checkbox.addEventListener("change", () => {
+      performSearch();
+      // If modal is open, search there too
+      if (document.getElementById("icon-picker-modal")?.style.display === "flex") {
+        const query = (document.getElementById("modal-search-input") as HTMLInputElement).value.trim();
+        renderModalResults(search(query, getActivePacks()));
+      }
+    });
 
     const chip = document.createElement("span");
     chip.className = "pack-chip";
@@ -194,9 +413,7 @@ function getActivePacks(): string[] {
 }
 
 function performSearch(): void {
-  const searchInput = document.getElementById(
-    "search-input"
-  ) as HTMLInputElement;
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
   const query = searchInput.value.trim();
   const activePacks = getActivePacks();
 
@@ -233,9 +450,11 @@ function search(query: string, packs: string[]): SearchResult[] {
       if (results.length >= maxResults) break;
 
       const normalizedKey = entry.key.toLowerCase();
-      if (tokens.every((t) => normalizedKey.includes(t))) {
-        const svg = buildSvgString(entry);
-        results.push({ set: entry.set, key: entry.key, svg });
+      // If no query, just return first N items
+      if (tokens.length === 0 || tokens.every((t) => normalizedKey.includes(t))) {
+        const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${entry.width} ${entry.height}">${entry.body}</svg>`;
+        const svg = colorSvg(rawSvg, selectedColor);
+        results.push({ set: entry.set, key: entry.key, svg, rawSvg });
       }
     }
 
@@ -243,11 +462,6 @@ function search(query: string, packs: string[]): SearchResult[] {
   }
 
   return results;
-}
-
-function buildSvgString(entry: IconEntry): string {
-  const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${entry.width} ${entry.height}">${entry.body}</svg>`;
-  return colorSvg(rawSvg, selectedColor);
 }
 
 function colorSvg(svgString: string, hexColor: string): string {
@@ -346,7 +560,7 @@ function setupColorSelector(): void {
   }
 }
 
-/* ──────────────────── Render Results ──────────────────── */
+/* ──────────────────── Render Main Results ──────────────────── */
 
 function renderResults(results: SearchResult[], query: string): void {
   const content = document.getElementById("content")!;
@@ -462,6 +676,17 @@ async function insertIconOnSlide(svgString: string): Promise<void> {
             dispWidth = 100 * aspect;
           }
         }
+      } else {
+         const w = parseFloat(svgEl.getAttribute("width") || "100");
+         const h = parseFloat(svgEl.getAttribute("height") || "100");
+         const aspect = w / h;
+         if (aspect > 1) {
+            dispHeight = 100 / aspect;
+            dispWidth = 100;
+         } else {
+            dispWidth = 100 * aspect;
+            dispHeight = 100;
+         }
       }
     }
   } catch (e) {
@@ -471,6 +696,8 @@ async function insertIconOnSlide(svgString: string): Promise<void> {
   // 1. Try SVG insertion if supported (ImageCoercion 1.2)
   const canUseSvg =
     typeof Office !== "undefined" &&
+    Office.context &&
+    Office.context.requirements &&
     Office.context.requirements.isSetSupported("ImageCoercion", "1.2") &&
     !!(Office.CoercionType as any)["XmlSvg"];
 
